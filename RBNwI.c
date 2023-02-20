@@ -33,6 +33,8 @@ double It;   // Total Mutual information It
 int *node;   // Node's Configuration
 int *mnode;  // Memory Configuration
 int *tnode;  // Configuration of the starting period (This is for tracking the length of attractor)
+double *Sx;   // Single variable entropy
+double *Sxy;  // Joint entropy
 int **list;  // Connection table
 int **functions; // Boolean functions for all nodes
 int **Pab; // Joint Probability
@@ -42,9 +44,10 @@ int **Pa;  // Probability of state
 void plot(); // plot important info about RBN. Such as the node configuration, in-degree list and Boolean functions.
 void init(); // initialized the RBN
 void evolution(); // evolution base on the states and Boolean functions
+void sum();       // Measuring the output state in order to get Mutual information
 int compare();    // Comparing two node Configurations
 int length();     // Measuring the length of attractor
-long Pro();     // Measuring the probability of output state in order to get Mutual information
+double I();         // Sum up all pairwise mutual information and get Total Mutual information of the network
 float ran2(long *idum);	  // typecast ran2
 
 int main(int argc, char *argv[]){
@@ -83,6 +86,10 @@ int main(int argc, char *argv[]){
     list = imatrix(0,N-1,0,K-1);
     // Combination( Choose two of the node in N )
     C = N*(N-1)/2;
+    // Single variable entropy
+    Sx = dvector(0,N-1);
+    // Joint entropy
+    Sxy = dvector(0,C-1);
     // Joint Probability Matrix. Row(); Columns(states 11 10 01 00), elements(Joint Probability)
     Pab = imatrix(0,C-1,0,3);
     // Probability Matrix. Row(Nodes); Columns(states 1 0), elements(Probility)
@@ -99,8 +106,6 @@ int main(int argc, char *argv[]){
     // DO FEW RUNS THAT TRY TO AVOID BASIAN STATE
     for (t=0; t<N; t++){
         evolution();
-        plot();
-        getchar();
     }
 
 
@@ -124,13 +129,20 @@ int main(int argc, char *argv[]){
     }
 
     // Measure the probability and Mutual information
+    
     for (t=0; t<len; t++){
-        evolution();
+        sum();
         plot();
+        evolution();
         getchar();
     }
 
+    It = I(len);
+    plot();
+    fprintf(stderr,"Total Mutual information of this network is : %f \n", It);
 
+    free_dvector(Sx, 0, N-1);
+    free_dvector(Sxy,0, C-1);
     free_ivector(node, 0, N-1);
     free_ivector(mnode,0, N-1);
     free_ivector(tnode,0, N-1);
@@ -141,9 +153,56 @@ int main(int argc, char *argv[]){
 
     return 0;
 }
-long Pro(){
+double I(int l){
+    double Pxy, Px, SUM;
+    int i,j,k,c;
+    int x,y,xy;
+    fprintf(stderr,"l: %d \n", l);
+    c=0; // Combination number
+    // Assigned Joint entropy and entropy
+    for (i=0; i<N; i++){
+        for (x=0; x<2; x++){
+            Px  = (double) Pa[i][x]/l;
+            fprintf(stderr,"Px= %f, P%d= %d \n", Px,x,x);
+            if (Px!=0) {Sx[i] = Sx[i] - Px*log2(Px);}
+        }
+        
+        for (j=i+1; j<N; j++){
+            for (xy=0; xy<4; xy++){
+                Pxy = (double) Pab[c][xy]/l;
+                fprintf(stderr,"Pxy= %f, P%d=%d \n", Pxy,xy,xy);
+                fprintf(stderr,"logPxy= %f \n", log2(Pxy));
+                if (Pxy!=0) {Sxy[c] = Sxy[c] - Pxy*log2(Pxy);}
+            }
+            c++;
+        }
+    }
+    // Sum all mutual information
+    c = 0;
+    SUM=0;
+    for (i=0; i<N; i++){
+        for (j=i+1; j<N; j++){
+            SUM = Sx[i] + Sx[j] - Sxy[c] + SUM;
+            c++;
+        }
+    }
+    SUM = SUM/C;
+    return SUM;
+}
 
+void sum(){
+    int i,j,k,c;
+    c=0;
+    for (i=0; i<N; i++){
+        Pa[i][node[i]]++;
+        for (j=i+1; j<N; j++){
+            k=2*node[i]+node[j];
+            Pab[c][k]++;
+            c++;
+        }
+    }
 
+    return;
 }
 int length(int m, int *add_len){
     int i,n,l;
@@ -273,6 +332,15 @@ void plot(){
         }
         fprintf(stderr,"\n");
     }
+
+    fprintf(stderr,"Sx: \n");
+    for (i=0; i<N; ++i){ fprintf(stderr,"%f ",Sx[i]);}
+    fprintf(stderr,"\n");
+
+    fprintf(stderr,"Sxy: \n");
+    for (i=0; i<C; ++i){ fprintf(stderr,"%f ", Sxy[i]);}
+    fprintf(stderr,"\n");
+
     fprintf(stderr,"\n\n");
 
     return;
