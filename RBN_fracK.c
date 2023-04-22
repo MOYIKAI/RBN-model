@@ -18,12 +18,13 @@ All nodes are updated simultaneously */
 #include <string.h>   // standard string library
 #include <stdio.h>	  // standard io library
 #include <stdlib.h>	  // standard library with lots of functions
+#include <time.h>     // standard library for measuring the time
 #include <math.h>	  // standard math library
 #include "my_nrutil.h"// include NR header files
 #define NRANSI		  // needed for NR
 
 /* Global variable*/
-long N; // Node 
+long N, Nl; // Total Nodes, nodes that will have lesser in-degree
 long K; // in-degree number for each node
 long F; // number of possible input states which is 2^K
 long C; // Combination (Combination of choosing 2 nodes in N number of nodes)
@@ -33,6 +34,8 @@ long tmax;   // evolution timestep (simulation steps)
 long seedt,seeds,tpseedt,tpseeds;// random number seed, seedt(Random number for the topology), seeds(Random number for the intial state)
 float p;            // Probability that outputs of Boolean functions is 1. Ex: p=0.5 is unbias
 int show;    // Flag parameter for showing the info
+clock_t TIME; // time for program
+
 
 /* Global vector*/
 int *node;   // Node's Configuration
@@ -64,27 +67,27 @@ float ran2(long *idum);	  // typecast ran2
 float ran1(long *idum);   // typecast ran1
 
 int main(int argc, char *argv[]){
+    TIME = clock();
     int value;      // Condition for finding an attractor
     int t,i;          // variable for intializied the network(time step)
 
-    FILE *outfile;	// pointer to filename
-
-    if (argc == 8){
+    if (argc == 9){
         // require argc be equal to number of command line entries
         N = atol(argv[1]);
-        K = atol(argv[2]);
-        p = atof(argv[3]);
-        seeds = atol(argv[4]);
-        seedt = atol(argv[5]);
-        tmax = atol(argv[6]);
-        show = atol(argv[7]);
+        Nl = atol(argv[2]);
+        K = atol(argv[3]);
+        p = atof(argv[4]);
+        seeds = atol(argv[5]);
+        seedt = atol(argv[6]);
+        tmax = atol(argv[7]);
+        show = atol(argv[8]);
         tpseeds = seeds;
         tpseedt = seedt;
     } 
     else {
         // error input value of argc 
         fprintf(stderr,"\n Initialization error:\n");
-        fprintf(stderr,"Usage: RBN.x N(node numbers) k(in-degree numbers) p(probability) seeds(intial state) seedt(topology) tmax show(1 or 0)\n");
+        fprintf(stderr,"Usage: RBN.x N(total node numbers) Nl(number of nodes that have K-1 in-degree) K(in-degree numbers) p(probability) seeds(intial state) seedt(topology) tmax show(1 or 0)\n");
         return 1;
     }
 
@@ -121,9 +124,10 @@ int main(int argc, char *argv[]){
     
     // initialized
     init();
+    if (show==1){plot();}
 
     // DO FEW RUNS THAT TRY TO AVOID BASIAN STATE
-    for (t=0; t<N; t++){evolution();}
+    for (t=0; t<10*N; t++){evolution();}
 
     // Copy the configuration for finding attractor length
     for (i=0;i<N;++i){ tnode[i] = node[i];}
@@ -131,7 +135,7 @@ int main(int argc, char *argv[]){
     value = 0;
     // Check for the first time
     value = length(1);
-    if (value == 1){result();if(show){plot();} free_all();}
+    if (value == 1){result();if(show==1){plot();} free_all();}
     else{
         // Copy the configuration
         for (i=0;i<N;++i){ tnode[i] = node[i];}
@@ -143,7 +147,7 @@ int main(int argc, char *argv[]){
             free_all();
         }
         else{
-            printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", 0, 0, 0, 0, 0, 10*tmax, tpseeds, tpseedt);
+            result();
             if (show==1){plot();}
             free_all();
         }
@@ -164,8 +168,9 @@ void result(){
     It = I(); // T[Sxyz, Sxy, Sx] Mxyz, Mxy 
     Mxyz = (It[2]*(N-1)*(N-2)/2 - It[1]*(N-2) + It[0])/C3;
     Mxy =  (It[2]*(N-1) - It[1])/C;
-    //fprintf(stderr, "Mxyz\tMxy\tSxyz\tSxy\tSx\tlen\tseeds\tseedt\n");
-    printf("%f\t%f\t%f\t%f\t%f\t%d\t%d\t%d\n", Mxyz, Mxy, It[0]/C3, It[1]/C, It[2]/N, len, tpseeds, tpseedt);
+    TIME = clock() - TIME;
+    double time_lasp = ((double) TIME)/CLOCKS_PER_SEC; // calculate the elapsed time
+    printf("%f\t%f\t%f\t%f\t%f\t%d\t%d\t%d\t%f\n", Mxyz, Mxy, It[0]/C3, It[1]/C, It[2]/N, len, tpseeds, tpseedt, time_lasp);
 }
 
 void free_all(){
@@ -283,7 +288,18 @@ int compare() {
 
 void evolution(){
     int i,j,k,n;
-    for (i=0; i<N; ++i){
+    // Randomly assigned the truth table output for nodes have K-1 in-degree
+    for (i=0; i<Nl; ++i){
+        n=0;
+        k=K-1;
+        for (j=0; j<K-1; ++j){
+            n=n+node[list[i][j]]*pow(2,k);
+            k = k-1;
+        }
+        mnode[i] = functions[i][n];
+    }
+    // Randomly assigned the truth table output for nodes have K in-degree
+    for (i=Nl; i<N; ++i){
         n=0;
         k=K-1;
         for (j=0; j<K; ++j){
@@ -304,8 +320,26 @@ void init(){
     float roll;
     int rollint;
 
+    // Randomly assigned the truth table output for nodes have K-1 in-degree
+    for (i=0; i<Nl; ++i){
+        dice = ran2(&seedt);
+        if (dice < 0.5){
+            for (j=0; j<(F/2); ++j){
+                dice = ran2(&seedt);
+                if (dice < p) {functions[i][j] = 1;} // bias output
+                else {functions[i][j]=0;}
+            }
+        }
+        else{
+            for (j=0; j<(F/2); ++j){
+                dice = ran2(&seedt);
+                if (dice < (1-p)) {functions[i][j] = 1;} // bias output
+                else {functions[i][j]=0;}
+            }
+        }
+    }
     // Randomly assigned the truth table output
-    for (i=0; i<N; ++i){
+    for (i=Nl; i<N; ++i){
         dice = ran2(&seedt);
         if (dice < 0.5){
             for (j=0; j<F; ++j){
@@ -322,8 +356,16 @@ void init(){
             }
         }
     }
-    // Randomly connected the in-degree
-    for (i=0; i<N; ++i){
+    // Randomly connected the in-degree for nodes that have K-1 in-degree
+    for (i=0; i<Nl; ++i){
+        for (j=0; j<K-1; ++j){
+            rollint = N*ran2(&seedt); // unifrom distrubution between 0 to N-1 integer numbers
+            //printf("ran2 %d\n",rollint1);
+            list[i][j] = rollint;
+        }
+    }
+    // Randomly connected the in-degree for nodes that have K in-degree
+    for (i=Nl; i<N; ++i){
         for (j=0; j<K; ++j){
             rollint = N*ran2(&seedt); // unifrom distrubution between 0 to N-1 integer numbers
             //printf("ran2 %d\n",rollint1);
