@@ -47,11 +47,13 @@ double *Sxyz;// Joint entropy 3 variables
 double *It;  // Array for Total entropy St, Total Joint entorpy; Total Mutual information It
 
 /* Global matrix*/
-int **list;  // Connection table
+int **listN;  // Connection table for nodes that in-degree=K
+int **listNl; // Connection table for nodes that in-degree=K-1
 int **Pabc;  // Joint Probability for 3 variables
 int **Pab;   // Joint Probability for 2 variables
 int **Pa;    // Probability of state
-int **functions; // Boolean functions for all nodes
+int **functionsN;  // Boolean functions for all nodes that in-degree=K
+int **functionsNl; // Boolean functions for all nodes that in-degree=K-1
 
 /* Functions */
 void result();     // plot the result of It, Sxyt, Sxt, len, seed
@@ -104,9 +106,11 @@ int main(int argc, char *argv[]){
     // Configuration of a starting period (This is for measuring the length of attractor)
     tnode = ivector(0,N-1);
     // Boolean functions for each node. Row(node number); Columns(Truth table number); elements(output of truth table for specific node)
-    functions = imatrix(0,N-1,0,F-1);
+    functionsN = imatrix(0,N-Nl-1,0,F-1);
+    functionsNl = imatrix(0,Nl-1,0,(F/2)-1);
     // Connection list for in-degree. Row(node number); Columns(number of links); elements(connected nodes)
-    list = imatrix(0,N-1,0,K-1);
+    listN = imatrix(0,N-Nl-1,0,K-1);
+    listNl = imatrix(0,Nl-1,0,K-2);
     // Single variable entropy
     Sx = dvector(0,N-1);
     // Joint entropy 2 variables
@@ -134,8 +138,8 @@ int main(int argc, char *argv[]){
 
     value = 0;
     // Check for the first time
-    value = length(1);
-    if (value == 1){result();if(show==1){plot();} free_all();}
+    value = length(3);
+    if (value == 1){result();if (show==1){plot();}}
     else{
         // Copy the configuration
         for (i=0;i<N;++i){ tnode[i] = node[i];}
@@ -144,14 +148,14 @@ int main(int argc, char *argv[]){
         if (value == 1){
             result();
             if (show==1){plot();}
-            free_all();
         }
         else{
             result();
             if (show==1){plot();}
-            free_all();
         }
     }
+
+    free_all();
 
     return 0;
 }
@@ -180,8 +184,10 @@ void free_all(){
     free_ivector(node, 0, N-1);
     free_ivector(mnode,0, N-1);
     free_ivector(tnode,0, N-1);
-    free_imatrix(list, 0, N-1, 0, K-1);
-    free_imatrix(functions, 0, N-1, 0, F-1);
+    free_imatrix(listN, 0, N-Nl-1, 0, K-1);
+    free_imatrix(functionsN, 0, N-Nl-1, 0, F-1);
+    free_imatrix(listNl, 0, Nl-1, 0, K-2);
+    free_imatrix(functionsNl, 0, Nl-1, 0, (F/2)-1);
     free_imatrix(Pabc, 0, C3-1, 0, 7);
     free_imatrix(Pab, 0, C-1, 0, 3);
     free_imatrix(Pa, 0, N-1, 0, 1);
@@ -291,22 +297,22 @@ void evolution(){
     // Randomly assigned the truth table output for nodes have K-1 in-degree
     for (i=0; i<Nl; ++i){
         n=0;
-        k=K-1;
+        k=K-2;
         for (j=0; j<K-1; ++j){
-            n=n+node[list[i][j]]*pow(2,k);
+            n=n+node[listNl[i][j]]*pow(2,k);
             k = k-1;
         }
-        mnode[i] = functions[i][n];
+        mnode[i] = functionsNl[i][n];
     }
     // Randomly assigned the truth table output for nodes have K in-degree
-    for (i=Nl; i<N; ++i){
+    for (i=0; i< N-Nl; ++i){
         n=0;
         k=K-1;
         for (j=0; j<K; ++j){
-            n=n+node[list[i][j]]*pow(2,k);
+            n=n+node[listN[i][j]]*pow(2,k);
             k = k-1;
         }
-        mnode[i] = functions[i][n];
+        mnode[i+Nl] = functionsN[i][n];
     }
     // Refreshing old configuration into new one
     for (i=0;i<N;++i){ node[i] = mnode[i];}
@@ -326,33 +332,33 @@ void init(){
         if (dice < 0.5){
             for (j=0; j<(F/2); ++j){
                 dice = ran2(&seedt);
-                if (dice < p) {functions[i][j] = 1;} // bias output
-                else {functions[i][j]=0;}
+                if (dice < p) {functionsNl[i][j] = 1;} // bias output
+                else {functionsNl[i][j]=0;}
             }
         }
         else{
             for (j=0; j<(F/2); ++j){
                 dice = ran2(&seedt);
-                if (dice < (1-p)) {functions[i][j] = 1;} // bias output
-                else {functions[i][j]=0;}
+                if (dice < (1-p)) {functionsNl[i][j] = 1;} // bias output
+                else {functionsNl[i][j]=0;}
             }
         }
     }
     // Randomly assigned the truth table output
-    for (i=Nl; i<N; ++i){
+    for (i=0; i<N-Nl; ++i){
         dice = ran2(&seedt);
         if (dice < 0.5){
             for (j=0; j<F; ++j){
                 dice = ran2(&seedt);
-                if (dice < p) {functions[i][j] = 1;} // bias output
-                else {functions[i][j]=0;}
+                if (dice < p) {functionsN[i][j] = 1;} // bias output
+                else {functionsN[i][j]=0;}
             }
         }
         else{
             for (j=0; j<F; ++j){
                 dice = ran2(&seedt);
-                if (dice < (1-p)) {functions[i][j] = 1;} // bias output
-                else {functions[i][j]=0;}
+                if (dice < (1-p)) {functionsN[i][j] = 1;} // bias output
+                else {functionsN[i][j]=0;}
             }
         }
     }
@@ -361,15 +367,15 @@ void init(){
         for (j=0; j<K-1; ++j){
             rollint = N*ran2(&seedt); // unifrom distrubution between 0 to N-1 integer numbers
             //printf("ran2 %d\n",rollint1);
-            list[i][j] = rollint;
+            listNl[i][j] = rollint;
         }
     }
     // Randomly connected the in-degree for nodes that have K in-degree
-    for (i=Nl; i<N; ++i){
+    for (i=0; i<N-Nl; ++i){
         for (j=0; j<K; ++j){
             rollint = N*ran2(&seedt); // unifrom distrubution between 0 to N-1 integer numbers
             //printf("ran2 %d\n",rollint1);
-            list[i][j] = rollint;
+            listN[i][j] = rollint;
         }
     }
 
@@ -403,21 +409,37 @@ void plot(){
     fprintf(stderr,"\n");
 
     // Print connection list
-    fprintf(stderr,"Connection list: \n");
-    for (i=0; i<N; ++i){
-        for (j=0; j<K; ++j){ fprintf(stderr,"%d ",list[i][j]+1);}
+    fprintf(stderr,"Connection list for Nl: \n");
+    for (i=0; i<Nl; ++i){
+        for (j=0; j<K-1; ++j){ fprintf(stderr,"%d ",listNl[i][j]+1);}
         fprintf(stderr,"\n");
     }
 
     // Print Output of Boolean functions
-    fprintf(stderr,"Boolean functions: \n");
-    for (i=0; i<N; ++i){
-        for (j=0; j<F; ++j){
-            fprintf(stderr,"%d ",functions[i][j]);
+    fprintf(stderr,"Boolean functions for Nl: \n");
+    for (i=0; i<Nl; ++i){
+        for (j=0; j<F/2; ++j){
+            fprintf(stderr,"%d ",functionsNl[i][j]);
         }
         fprintf(stderr,"\n");
     }
 
+    // Print connection list
+    fprintf(stderr,"Connection list for N-Nl: \n");
+    for (i=0; i<N-Nl; ++i){
+        for (j=0; j<K; ++j){ fprintf(stderr,"%d ",listN[i][j]+1);}
+        fprintf(stderr,"\n");
+    }
+
+    // Print Output of Boolean functions
+    fprintf(stderr,"Boolean functions for N-Nl: \n");
+    for (i=0; i<N-Nl; ++i){
+        for (j=0; j<F; ++j){
+            fprintf(stderr,"%d ",functionsN[i][j]);
+        }
+        fprintf(stderr,"\n");
+    }
+    
     // Print the Pa
     fprintf(stderr,"Number of occuring state in Pa: \n");
     for (i=0; i<N; ++i){
@@ -459,6 +481,7 @@ void plot(){
     fprintf(stderr,"Sxyz: \n");
     for (i=0; i<C3; ++i){ fprintf(stderr,"Sxyz%d: %f ", i, Sxyz[i]);}
     fprintf(stderr,"\n");
+    
 
     fprintf(stderr,"\n\n");
 
