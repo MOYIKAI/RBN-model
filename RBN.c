@@ -41,6 +41,7 @@ clock_t TIME; // time for program
 int *node;   // Node's Configuration
 int *mnode;  // Memory for Node's Configuration
 int *tnode;  // Configuration of the starting period (This is for tracking the length of attractor)
+int *dnode;  // Frozen, irrelevant, relevant node (1,2,0)
 double *Sx;  // Single variable entropy
 double *Sxy; // Joint entropy 2 variables
 double *Sxyz;// Joint entropy 3 variables
@@ -54,6 +55,7 @@ int **Pa;    // Probability of state
 int **functions; // Boolean functions for all nodes
 
 /* Functions */
+void detect();     // assign the property of the node (Frozen, irr, rel)
 void result();     // plot the result of It, Sxyt, Sxt, len, seed
 void free_all();   // free the memory 
 void plot();       // plot important info about RBN. Such as the node configuration, in-degree list and Boolean functions.
@@ -102,6 +104,8 @@ int main(int argc, char *argv[]){
     mnode = ivector(0,N-1);
     // Configuration of a starting period (This is for measuring the length of attractor)
     tnode = ivector(0,N-1);
+    // Property of the node
+    dnode = ivector(0,N-1);
     // Boolean functions for each node. Row(node number); Columns(Truth table number); elements(output of truth table for specific node)
     functions = imatrix(0,N-1,0,F-1);
     // Connection list for in-degree. Row(node number); Columns(number of links); elements(connected nodes)
@@ -123,7 +127,10 @@ int main(int argc, char *argv[]){
     
     // initialized
     init();
-
+    plot();
+    detect();
+    plot();
+    /*
     // DO FEW RUNS THAT TRY TO AVOID BASIAN STATE
     for (t=0; t<10*N; t++){evolution();}
 
@@ -149,8 +156,8 @@ int main(int argc, char *argv[]){
             if (show==1){plot();}
             free_all();
         }
-    }
-
+    }*/
+    free_all();
     return 0;
 }
 
@@ -168,7 +175,7 @@ void result(){
     Mxy =  (It[2]*(N-1) - It[1])/C;
     TIME = clock() - TIME;
     double time_lasp = ((double) TIME)/CLOCKS_PER_SEC; // calculate the elapsed time
-    printf("%f\t%f\t%f\t%f\t%f\t%d\t%d\t%d\t%f\n", Mxyz, Mxy, It[0]/C3, It[1]/C, It[2]/N, len, tpseeds, tpseedt, time_lasp);
+    printf("%f\t%f\t%f\t%f\t%f\t%ld\t%ld\t%ld\t%f\n", Mxyz, Mxy, It[0]/C3, It[1]/C, It[2]/N, len, tpseeds, tpseedt, time_lasp);
 }
 
 void free_all(){
@@ -178,6 +185,7 @@ void free_all(){
     free_ivector(node, 0, N-1);
     free_ivector(mnode,0, N-1);
     free_ivector(tnode,0, N-1);
+    free_ivector(dnode,0, N-1);
     free_imatrix(list, 0, N-1, 0, K-1);
     free_imatrix(functions, 0, N-1, 0, F-1);
     free_imatrix(Pabc, 0, C3-1, 0, 7);
@@ -284,6 +292,34 @@ int compare() {
   return 1;
 }
 
+void detect(){
+  int i,j,k;
+  int frozen;
+  int irr = 0;
+  // detect the Frozen nodes
+  for (i=0; i<N; ++i){
+    frozen = functions[i][0];
+    for (j=1; j<F; ++j){
+      if ( frozen == functions[i][j] ) { dnode[i] = 1;}
+      else{break;}
+    }
+  }
+
+  // detect irrelevant nodes
+  for (i=0; i<N; ++i){
+    if ( dnode[i] != 1 || dnode[i] != 2 ){
+      for(j=0; j<K; ++j){
+        if (dnode[list[i][j]]==1 || dnode[list[i][j]]==2){irr = irr+1;}
+        else {break;}
+      }
+      if (irr == K && dnode[i] == 0){dnode[i]=2;i=-1;}
+      irr = 0;
+    }
+  }
+
+}
+
+
 void evolution(){
     int i,j,k,n;
     for (i=0; i<N; ++i){
@@ -306,6 +342,9 @@ void init(){
     float dice;
     float roll;
     int rollint;
+
+    // assigned the property of nodes
+    for (i=0; i<N; ++i){dnode[i]=0;}
 
     // Randomly assigned the truth table output
     for (i=0; i<N; ++i){
@@ -358,6 +397,12 @@ void init(){
 // Plot info of the system
 void plot(){
     int i,j;
+
+    // Print nodes configuration
+    fprintf(stderr,"Nodes Property: \n");
+    for (i=0; i<N; ++i){ fprintf(stderr,"%d ",dnode[i]);}
+    fprintf(stderr,"\n");
+
     // Print nodes configuration
     fprintf(stderr,"Nodes Configuration: \n");
     for (i=0; i<N; ++i){ fprintf(stderr,"%d ",node[i]);}
@@ -378,7 +423,7 @@ void plot(){
         }
         fprintf(stderr,"\n");
     }
-
+    /*
     // Print the Pa
     fprintf(stderr,"Number of occuring state in Pa: \n");
     for (i=0; i<N; ++i){
@@ -420,7 +465,7 @@ void plot(){
     fprintf(stderr,"Sxyz: \n");
     for (i=0; i<C3; ++i){ fprintf(stderr,"Sxyz%d: %f ", i, Sxyz[i]);}
     fprintf(stderr,"\n");
-
+    */
     fprintf(stderr,"\n\n");
 
     return;
