@@ -5,17 +5,14 @@ import pandas as pd
 import sys
 
 # Check if the correct number of command-line arguments is provided
-if len(sys.argv) != 5:
+if len(sys.argv) != 2:
     print("Please provide exactly three filenames as command-line arguments.")
-    print("python3 grapy.py configfile nodesize edgewidth figuresize")
+    print("python3 cycle_l.py configfile")
     sys.exit(1)
 
 
 # Retrieve the filenames from the command-line arguments
 filename1 = sys.argv[1]
-size  = int(sys.argv[2])
-width = float(sys.argv[3])
-figs  = int(sys.argv[4])
 
 # Step 1: Parse the text and extract node and edge information
 data = np.loadtxt(filename1,dtype=int)
@@ -37,21 +34,5 @@ graph.add_edges_from(edges,color='black')
 
 # Step 5: Finding attractors/cycles
 attractors = list(nx.simple_cycles(graph))
-edge_att = []
-for i in range(len(attractors)):
-    if len(attractors[i]) == 1:
-        edge_att.append((attractors[i][0],attractors[i][0]))
-    else:
-        for e in list(nx.utils.pairwise(attractors[i])):
-            edge_att.append(e)
-        edge_att.append((attractors[i][-1], attractors[i][0]))
-
-
-
-# Step 5: Visualize the graph
-
-pos = nx.nx_agraph.graphviz_layout(graph, prog="twopi", args="")
-plt.figure(figsize=(figs,figs))
-nx.draw(graph, pos, with_labels=False, node_size=size, node_color='lightblue', edge_color='black', width=width)
-nx.draw_networkx_edges(graph, pos, edgelist=edge_att, width=width*2, edge_color="red")
-plt.show()
+for attractor in attractors:
+    print("%d" %len(attractor), attractor)
