@@ -87,16 +87,14 @@ int main(int argc, char *argv[]){
     indegf = fopen(argv[6],"w");
     for (i=0; i<N; ++i){
         for (j=0; j<K; ++j){ fprintf(indegf,"%d ",connect[i][j]);}
-        fprintf(indegf, "%d \n",i);
+        fprintf(indegf, "\n");
     }
     fclose(indegf);
 
     // Print boolean functions info
     boolff = fopen(argv[7],"w");
-    fprintf(boolff,"node"); for (j=0; j<F; ++j){fprintf(boolff," %d",j);} fprintf(boolff,"\n"); // Fist line for node and boolean funtions index
     for (i=0; i<N; ++i){
-        fprintf(boolff, "%d",i); // node number
-        for (j=0; j<F; ++j){ fprintf(boolff," %d",functions[i][j]);} // function output
+        for (j=0; j<F; ++j){ fprintf(boolff,"%d ",functions[i][j]);} // function output
         fprintf(boolff, "\n");
     }
     fclose(boolff);

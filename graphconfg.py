@@ -38,13 +38,17 @@ graph.add_edges_from(edges,color='black')
 # Step 5: Finding attractors/cycles
 attractors = list(nx.simple_cycles(graph))
 edge_att = []
+node_att = []
 for i in range(len(attractors)):
     if len(attractors[i]) == 1:
         edge_att.append((attractors[i][0],attractors[i][0]))
+        node_att.append(attractors[i][0])
     else:
         for e in list(nx.utils.pairwise(attractors[i])):
             edge_att.append(e)
+            node_att.append(e[0])
         edge_att.append((attractors[i][-1], attractors[i][0]))
+        node_att.append(attractors[i][-1])
 
 
 
@@ -53,5 +57,6 @@ for i in range(len(attractors)):
 pos = nx.nx_agraph.graphviz_layout(graph, prog="twopi", args="")
 plt.figure(figsize=(figs,figs))
 nx.draw(graph, pos, with_labels=False, node_size=size, node_color='lightblue', edge_color='black', width=width)
-nx.draw_networkx_edges(graph, pos, edgelist=edge_att, width=width*2, edge_color="red")
+nx.draw_networkx_edges(graph, pos, edgelist=edge_att, width=width*3, edge_color="red")
+nx.draw_networkx_nodes(graph, pos, nodelist=node_att, node_size=size*4, node_color="red")
 plt.show()

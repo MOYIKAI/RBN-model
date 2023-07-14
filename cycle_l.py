@@ -1,7 +1,5 @@
 import numpy as np
 import networkx as nx
-import matplotlib.pyplot as plt
-import pandas as pd
 import sys
 
 # Check if the correct number of command-line arguments is provided
@@ -35,4 +33,7 @@ graph.add_edges_from(edges,color='black')
 # Step 5: Finding attractors/cycles
 attractors = list(nx.simple_cycles(graph))
 for attractor in attractors:
-    print("%d" %len(attractor), attractor)
+    print("%d " %len(attractor), end ="")
+    for e in attractor:
+        print("%d " %e, end="")
+    print("")
