@@ -1,15 +1,10 @@
-// Simple C program that explores the RBN(Random Boolean Network) configuration space network . Originally written by Yi-Kai Mo 06/2023
+// Simple C program that generates The structre of RBN. Originally written by Yi-Kai Mo 06/2023
 // Program uses Numerical Recipies (NR) arrays, random numbers.
 //
 // Parameters:
 // N - number of Nodes for the Network 
 // k - number of in-degree links for each node
-// p - probability of the output
-/*
-This RBN model is setup by 3 steps:
-    1. First randomly choose the state(0 or 1) for each node
-    2. Randomly assigned the in-degree links for each node. It does not allow self-connected.
-    3. Given the Probability p, p is the probability that output of Boolean function is 1*/
+/* Randomly assigned the in-degree links for each node. It does not allow self-connected. */
 
 #include <string.h>   // standard string library
 #include <stdio.h>	  // standard io library
@@ -23,13 +18,9 @@ This RBN model is setup by 3 steps:
 /* Global variable*/
 long N; // Node 
 long K; // in-degree number for each node
-long F; // number of possible input states which is 2^K 
 long seedt, tpseedt; // seedt(Random number for the topology)
 clock_t TIME; // time for program
 
-
-/* Global vector */
-int *node;         // node's Configuration
 
 /* Global matrix */
 int **connect;   // in-degree for connection list
@@ -59,10 +50,6 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    // Number of possible input states
-    F = pow(2,K);
-    // State of each node will be 1 or 0. Index means node number; elements means the state
-    node = ivector(0,N-1);
     // Connection list for in-degree. Row(node number); Columns(number of links); elements(connected nodes)
     connect = imatrix(0,N-1,0,K-1);
     
@@ -71,7 +58,7 @@ int main(int argc, char *argv[]){
     init();
 
     // Print in-degree info
-    indegf = fopen(argv[6],"w");
+    indegf = fopen(argv[4],"w");
     for (i=0; i<N; ++i){
         for (j=0; j<K; ++j){ fprintf(indegf,"%d ",connect[i][j]);}
         fprintf(indegf, "\n");
@@ -85,7 +72,6 @@ int main(int argc, char *argv[]){
 }
 
 void free_all(){
-    free_ivector(node, 0, N-1);
     free_imatrix(connect, 0, N-1, 0, K-1);
     return;
 }

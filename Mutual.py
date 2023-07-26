@@ -29,7 +29,17 @@ graph.add_nodes_from(nodes)
 # Step 4: Add edges
 graph.add_edges_from(edges,color='black')
 
+#Finding attractors
 attractors = list(nx.simple_cycles(graph))
+
+#If all attractors are fixed point. There's no need to measure MI
+flag = 0
+for attractor in attractors:
+    flag = len(attractor) + flag
+if flag == len(attractors):
+    print ("0 0 0 %s" %(filename1))
+    exit()
+
 
 edge_att = []
 for i in range(len(attractors)):
@@ -113,4 +123,4 @@ for idx, basin in enumerate(ancestors_of_attractor):
     Itotal = Itotal + (I[idx]*len(attractors[idx]))/(len(basin)*(int(nodenum*(nodenum-1)/2)))
     Sxytotal = Sxytotal + sum(Sxy[idx])*len(attractors[idx])/(len(basin)*int(nodenum*(nodenum-1)/2))
     Sxtotal = Sxtotal + sum(Sx[idx])*len(attractors[idx])/(len(basin)*nodenum)
-print ("%7f %7f %7f" % (Itotal, Sxtotal, Sxytotal))
+print ("%7f %7f %7f %s" % (Itotal, Sxtotal, Sxytotal, filename1))

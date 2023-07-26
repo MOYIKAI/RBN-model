@@ -32,8 +32,18 @@ graph.add_edges_from(edges,color='black')
 
 # Step 5: Finding attractors/cycles
 attractors = list(nx.simple_cycles(graph))
+
 for attractor in attractors:
     print("%d " %len(attractor), end ="")
     for e in attractor:
         print("%d " %e, end="")
     print("")
+
+
+flag = 0
+for attractor in attractors:
+    flag = len(attractor) + flag
+
+if flag == len(attractors):
+    print ("All the attractors are fixed point")
+    exit()

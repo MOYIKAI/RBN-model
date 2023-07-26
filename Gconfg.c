@@ -2,14 +2,8 @@
 // Program uses Numerical Recipies (NR) arrays, random numbers.
 //
 // Parameters:
-// N - number of Nodes for the Network 
-// k - number of in-degree links for each node
-// p - probability of the output
-/*
-This RBN model is setup by 3 steps:
-    1. First randomly choose the state(0 or 1) for each node
-    2. Randomly assigned the in-degree links for each node. It does not allow self-connected.
-    3. Given the Probability p, p is the probability that output of Boolean function is 1*/
+// 
+/* Find the configuration map */
 
 #include <string.h>   // standard string library
 #include <stdio.h>	  // standard io library
@@ -24,8 +18,6 @@ This RBN model is setup by 3 steps:
 long N; // Node 
 long K; // in-degree number for each node
 long F; // number of possible input states which is 2^K 
-long seedt, tpseedt, seedb, tpseedb;// seedt(Random number for the topology), seedb(Random number for assigned boolean function)
-float p;            // Probability that outputs of Boolean functions is 1. Ex: p=0.5 is unbias
 clock_t TIME; // time for program
 
 
@@ -47,24 +39,19 @@ int main(int argc, char *argv[]){
 
     int i,j,k,num;
     
-    FILE *indegf;   // pointer to in-degree file
-    FILE *boolff;	// pointer to boolean functions file
-    FILE *confgf;   // pointer to the configuration network  file
-    if (argc == 9){
+    FILE *stf;  // pointer to in-degree file (structure file)
+    FILE *ibf;	// input boolean functions file
+    FILE *conf;   // pointer to the configuration network  file
+
+    if (argc == 6){
         // require argc be equal to number of command line entries
         N = atol(argv[1]);
         K = atol(argv[2]);
-        p = atof(argv[3]);
-        seedt = atol(argv[4]);
-        seedb = atol(argv[5]);
-
-        tpseedt = seedt;
-        tpseedb = seedb;
     } 
     else {
         // error input value of argc 
         fprintf(stderr,"\n Initialization error:\n");
-        fprintf(stderr,"Usage: cRBN.x N k p seedt seedb in-degreefile booleanfile confignetfile\n");
+        fprintf(stderr,"Usage: Gconfg.x N k stucturef intialboolf configef\n");
         return 1;
     }
 
@@ -81,23 +68,28 @@ int main(int argc, char *argv[]){
     
     
     // initialized
-    init();
-
-    // Print in-degree info
-    indegf = fopen(argv[6],"w");
+    // Read file and connected the in-degree
+    stf = fopen(argv[3],"r");
     for (i=0; i<N; ++i){
-        for (j=0; j<K; ++j){ fprintf(indegf,"%d ",connect[i][j]);}
-        fprintf(indegf, "\n");
+        for (j=0; j<K; ++j){
+            fscanf(stf, "%d", &connect[i][j]);
+            //printf("%d ", connect[i][j]);
+        }
+        //printf("\n");
     }
-    fclose(indegf);
+    fclose(stf);
 
-    // Print boolean functions info
-    boolff = fopen(argv[7],"w");
+    // Read file and fill in the Boolean functions
+    ibf = fopen(argv[4],"r");
     for (i=0; i<N; ++i){
-        for (j=0; j<F; ++j){ fprintf(boolff,"%d ",functions[i][j]);} // function output
-        fprintf(boolff, "\n");
+        for (j=0; j<F; ++j){
+            fscanf(ibf, "%d", &functions[i][j]);
+            //printf("%d ", functions[i][j]);
+        }
+        //printf("\n");
     }
-    fclose(boolff);
+    fclose(ibf);
+    
 
     // Find the Configuration space network
     for (j=0; j<pow(2,N); ++j){
@@ -114,15 +106,17 @@ int main(int argc, char *argv[]){
         confignet[j] = num;
     }
 
+
+
     // Print Configuration space network
-    confgf = fopen(argv[8],"w");
+    conf = fopen(argv[5],"w");
     for (i=0; i<pow(2,N); ++i){
-        fprintf(confgf,"%d %d\n", i, confignet[i]);
+        fprintf(conf,"%d %d\n", i, confignet[i]);
     }
-    fclose(confgf);
+    fclose(conf);
 
     free_all();
-
+    
     return 0;
 }
 
@@ -151,42 +145,4 @@ void evolution(){
     for (i=0;i<N;++i){ node[i] = mnode[i];}
 
     return ;
-}
-
-void init(){
-    int i,j,fl;
-    float dice;
-    float roll;
-    int rollint;
-
-    // Randomly assigned the truth table output
-    for (i=0; i<N; ++i){
-        dice = ran1(&seedb);
-        if (dice < 0.5){
-            for (j=0; j<F; ++j){
-                dice = ran1(&seedb);
-                if (dice < p) {functions[i][j] = 1;} // bias output
-                else {functions[i][j]=0;}
-            }
-        }
-        else{
-            for (j=0; j<F; ++j){
-                dice = ran1(&seedb);
-                if (dice < (1-p)) {functions[i][j] = 1;} // bias output
-                else {functions[i][j]=0;}
-            }
-        }
-    }
-
-    // Randomly connected the in-degree
-    for (i=0; i<N; ++i){
-        for (j=0; j<K; ++j){
-            // while loop to avoid self-connect
-            rollint = N*ran2(&seedt);// unifrom distrubution between 0 to N-1 integer numbers
-            while ( i == rollint ){
-                rollint = N*ran2(&seedt);
-            }
-            connect[i][j] = rollint;
-        }
-    }
 }
