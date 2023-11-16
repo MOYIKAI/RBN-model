@@ -5,7 +5,7 @@
 void saveAttractor(char *name, int *Att, int S, int G){
   int i;
   FILE *file = fopen(name, "a");
-  fprintf(file, "Generation %d\n", G);
+  fprintf(file, "G %d\n", G);
   for (i=0; i<S; i++){
     fprintf(file, "%-3d ", Att[i]);
   }
@@ -15,7 +15,7 @@ void saveAttractor(char *name, int *Att, int S, int G){
 
 void saveconnect(char *name, int **connect, int N, int K){
   int i, j;
-  FILE *file = fopen(name, "a");
+  FILE *file = fopen(name, "w");
   for (i=0; i<N; ++i){
     for (j=0; j<K; ++j){ fprintf(file, "%-3d ",connect[i][j]);}
     fprintf(file, "\n");
@@ -25,7 +25,7 @@ void saveconnect(char *name, int **connect, int N, int K){
 void saveBoolfS(char *name, int **BoolfS, int N, int K, int S, int G){
   int i, j;
   FILE *file = fopen(name, "a");
-  fprintf(file, "Generation %d\n", G);
+  fprintf(file, "G %d\n", G);
   for (i=0; i<S; ++i){
     for (j=0; j<N; ++j){
       fprintf(file, "%-4d ",BoolfS[i][j]);
@@ -37,7 +37,7 @@ void saveBoolfS(char *name, int **BoolfS, int N, int K, int S, int G){
 void saveIniS(char *name, int **IniS, int N, int S, int G){
   int i, j;
   FILE *file = fopen(name, "a");
-  fprintf(file, "Generation %d\n", G);
+  fprintf(file, "G %d\n", G);
   for (i=0; i<S; ++i){
     for (j=0; j<N; ++j){fprintf(file, "%d ", IniS[i][j]);}
     fprintf(file, "\n");
@@ -47,7 +47,7 @@ void saveIniS(char *name, int **IniS, int N, int S, int G){
 void savenode(char *name, int *node, int N, int G){
   int i;
   FILE *file = fopen(name, "a");
-  fprintf(file, "Generation %d\n", G);
+  fprintf(file, "G %d\n", G);
   for (i=0; i<N; i++){
     fprintf(file, "%d ", node[i]);
     fprintf(file, "\n");
@@ -57,7 +57,7 @@ void savenode(char *name, int *node, int N, int G){
 void saveMI(char *name, double *MI, int S, int G){
   int i;
   FILE *file = fopen(name, "a");
-  fprintf(file, "Generation %d\n", G);
+  fprintf(file, "G %d\n", G);
   for (i=0; i<S; i++){
     fprintf(file, "%lf ", MI[i]);
   }
