@@ -2,13 +2,14 @@
 // Program uses Numerical Recipies (NR) arrays, random numbers.
 //
 // Parameters:
+// N - number of Nodes for the Network 
+// k - number of in-degree links for each node
 // 
-/* Find the configuration map */
+/* Find the configuration map from Boolean function and Boolean map structure */
 
 #include <string.h>   // standard string library
 #include <stdio.h>	  // standard io library
 #include <stdlib.h>	  // standard library with lots of functions
-#include <time.h>     // standard library for measuring the time
 #include <math.h>	  // standard math library
 #include "my_nrutil.h"// include NR header files
 #include "random.h"
@@ -18,8 +19,6 @@
 long N; // Node 
 long K; // in-degree number for each node
 long F; // number of possible input states which is 2^K 
-clock_t TIME; // time for program
-
 
 /* Global vector */
 int *node;         // node's Configuration
@@ -30,18 +29,15 @@ int **connect;   // in-degree for connection list
 int **functions; // Boolean functions for all nodes
 
 /* Functions */
-void free_all();   // free the memory 
-void init();       // initialized the RBN
 void evolution();  // evolution base on the states and Boolean functions
 
 int main(int argc, char *argv[]){
-    TIME = clock();
 
     int i,j,k,num;
     
     FILE *stf;  // pointer to in-degree file (structure file)
     FILE *ibf;	// input boolean functions file
-    FILE *conf;   // pointer to the configuration network  file
+    FILE *conf; // pointer to the configuration network file
 
     if (argc == 6){
         // require argc be equal to number of command line entries
@@ -66,16 +62,13 @@ int main(int argc, char *argv[]){
     // Connection list for in-degree. Row(node number); Columns(number of links); elements(connected nodes)
     connect = imatrix(0,N-1,0,K-1);
     
-    
     // initialized
     // Read file and connected the in-degree
     stf = fopen(argv[3],"r");
     for (i=0; i<N; ++i){
         for (j=0; j<K; ++j){
             fscanf(stf, "%d", &connect[i][j]);
-            //printf("%d ", connect[i][j]);
         }
-        //printf("\n");
     }
     fclose(stf);
 
@@ -84,13 +77,10 @@ int main(int argc, char *argv[]){
     for (i=0; i<N; ++i){
         for (j=0; j<F; ++j){
             fscanf(ibf, "%d", &functions[i][j]);
-            //printf("%d ", functions[i][j]);
         }
-        //printf("\n");
     }
     fclose(ibf);
     
-
     // Find the Configuration space network
     for (j=0; j<pow(2,N); ++j){
         num = 0;
@@ -106,28 +96,20 @@ int main(int argc, char *argv[]){
         confignet[j] = num;
     }
 
-
-
     // Print Configuration space network
     conf = fopen(argv[5],"w");
     for (i=0; i<pow(2,N); ++i){
-        fprintf(conf,"%d %d\n", i, confignet[i]);
+        fprintf(conf,"%d\n", confignet[i]);
     }
     fclose(conf);
 
-    free_all();
-    
-    return 0;
-}
-
-void free_all(){
     free_ivector(node, 0, N-1);
     free_ivector(confignet, 0, (int) pow(2,N) - 1);
     free_imatrix(connect, 0, N-1, 0, K-1);
     free_imatrix(functions, 0, N-1, 0, F-1);
-    return;
+    
+    return 0;
 }
-
 
 void evolution(){
     int i,j,k,n;

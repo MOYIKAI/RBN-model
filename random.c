@@ -17,8 +17,8 @@
 #define IR2 3791
 #define NTAB 32
 #define NDIV1 (1+IMM1/NTAB)
-#define EPS 1.2e-7
-#define RNMX (1.0-EPS)
+#define PPS 1.2e-7
+#define RNMX (1.0-PPS)
 
 float ran2(long *idum)
 {
@@ -89,7 +89,6 @@ float ran1(long *idum){
     else return temp;
 }
 
-
 #undef IM1
 #undef IM2
 #undef AM1
@@ -102,7 +101,7 @@ float ran1(long *idum){
 #undef IR2
 #undef NTAB
 #undef NDIV1
-#undef EPS
+#undef PPS
 #undef RNMX
 
 #undef IA 
