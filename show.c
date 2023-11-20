@@ -69,27 +69,27 @@ void showPxy(int **Pxy, int N){
     printf("\n");
   }
 }
-void showSx(double *Sx, int N){
+void showPxyz(int **Pxyz, int H){
+  int i,k;
+  for (i=0; i<H; i++){
+    for (k=0; k < 8; k++){printf("Pxy[%d][%d]:%d ", i, k, Pxyz[i][k]);}
+    printf("\n");
+  }
+}
+void showS(double *S, int N){
   int i;
   for (i=0; i<N; i++){
-    printf("Sx[%d]:%lf ", i, Sx[i]);
+    printf("S[%d]:%lf ", i, S[i]);
     printf("\n");
   }
 }
-void showSxy(double *Sxy, int C){
-  int i;
-  for (i=0; i<C; i++){
-    printf("Sxy[%d]:%lf ", i, Sxy[i]);
-    printf("\n");
-  }
-}
+
 void showrep(int *rep, int S){
   int i;
   for (i=0; i<S; i++){
     printf("rep[%d]:%d ", i, rep[i]);
     printf("\n");
   }
-
 }
 void showfitness(double *fitness, int S){
   int i;
@@ -102,6 +102,13 @@ void showMI(double *MI, int S){
   int i;
   for (i=0; i<S; i++){
     printf("MI[%d]:%lf ", i, MI[i]);
+    printf("\n");
+  }
+}
+void showTE(double *TE, int S){
+  int i;
+  for (i=0; i<S; i++){
+    printf("TE[%d]:%lf ", i, TE[i]);
     printf("\n");
   }
 }

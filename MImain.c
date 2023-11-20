@@ -47,8 +47,8 @@ int main(int argc, char *argv[]){
   int *Att;          // Attractors length
   
 
-  if (argc == 16)
-  {
+  if (argc == 16){
+    // require argc be equal to number of command line entries
     N = atol(argv[1]);
     K = atol(argv[2]);
     S = atol(argv[3]);
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]){
   Zeros1d_dobule(MI, S);
   fitness = dvector(0, S-1);
   Zeros1d_dobule(fitness, S);
-  rep = ivector(0,S-1);
+  rep = ivector(0,S-1);           // duplicate vector.
   Zeros1d_int(rep, S);
   Att = ivector(0,S-1);
   Zeros1d_int(Att, S);
@@ -126,32 +126,27 @@ int main(int argc, char *argv[]){
 
   
   /* Start the evolution*/
-  for (g=0; g<G; g++)
-  {
+  for (g=0; g<G; g++){
     sumMI = 0;
 
     // Each generation go through every population
-    for (i=0; i < S; i++)
-    {
+    for (i=0; i < S; i++){
       AIP2node(IniS[i], node, N);            // copy inital cofig to node
       ABP2ftable(BoolfS[i], ftable, N, K);   // BoolfS[i] to ftable
-      for (j=0; j < 20*N; j++){Nextconfig(connect, ftable, node, mnode, N, K);}
+      for (j=0; j < 50*N; j++){Nextconfig(connect, ftable, node, mnode, N, K);}
 
       Anode2tnode(node, tnode, N); // copy the starting config
       length = 0;
       flag = 0;
-      while (flag == 0 && length < 10*N)
-      {
+      while (flag == 0 && length < 10*N){
         Nextconfig(connect, ftable, node, mnode, N, K);
         length++;
         flag = compare(node, tnode, N);
       }
 
       // If cycle period is fixed point there's no need to find probability
-      if (length > 1)
-      {
-        for (j=0; j<length; j++)
-        {
+      if (length > 1){
+        for (j=0; j<length; j++){
           SumProbability(Pxy, Px, node, N);
           Nextconfig(connect, ftable, node, mnode, N, K);
         }
@@ -171,18 +166,15 @@ int main(int argc, char *argv[]){
       Zeros1d_dobule(Sxy, C);
     }
     
-    if (g==0 || g==1 || g==10 || g==100 || g==1000 || g==10000 || g==100000)
-    {
-      //fprintf(stderr, "g=%d\n", g);
-      // Save all the info when generation is 0, 1, 10, 100, 1000 ,10^4
-      saveBoolfS(argv[12], BoolfS, N, K, S, g);
-      //saveIniS(argv[13], IniS, N, S, g);
-      saveMI(argv[14], MI, S, g);
-      saveAttractor(argv[15], Att, S, g);
-    }
-    
+    // Save all the info
+    saveBoolfS(argv[12], BoolfS, N, K, S, g);
+    //saveIniS(argv[13], IniS, N, S, g);
+    saveMI(argv[14], MI, S, g);
+    saveAttractor(argv[15], Att, S, g);
+
     // Measuring fitness function
     for (i=0; i<S; i++){fitness[i] = pow(MI[i],alp)/sumMI;}
+    //showfitness(fitness, S);
 
     // Choosing high MI individual base on MI
     Replicate(rep, fitness, S, seedB);
