@@ -72,7 +72,7 @@ void showPxy(int **Pxy, int N){
 void showPxyz(int **Pxyz, int H){
   int i,k;
   for (i=0; i<H; i++){
-    for (k=0; k < 8; k++){printf("Pxy[%d][%d]:%d ", i, k, Pxyz[i][k]);}
+    for (k=0; k < 8; k++){printf("Pxyz[%d][%d]:%d ", i, k, Pxyz[i][k]);}
     printf("\n");
   }
 }
@@ -83,7 +83,6 @@ void showS(double *S, int N){
     printf("\n");
   }
 }
-
 void showrep(int *rep, int S){
   int i;
   for (i=0; i<S; i++){
@@ -95,20 +94,6 @@ void showfitness(double *fitness, int S){
   int i;
   for (i=0; i<S; i++){
     printf("fitness[%d]:%lf ", i, fitness[i]);
-    printf("\n");
-  }
-}
-void showMI(double *MI, int S){
-  int i;
-  for (i=0; i<S; i++){
-    printf("MI[%d]:%lf ", i, MI[i]);
-    printf("\n");
-  }
-}
-void showTE(double *TE, int S){
-  int i;
-  for (i=0; i<S; i++){
-    printf("TE[%d]:%lf ", i, TE[i]);
     printf("\n");
   }
 }

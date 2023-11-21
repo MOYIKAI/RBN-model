@@ -32,15 +32,13 @@ int main(int argc, char *argv[]){
   int **ftable;     // Boolean functions table for one population
 
   /* Global vector & matrix for Transfer Entropy*/
-  double *S_xbt;          // Node X time t's entropy
-  double *S_xnt;          // Node X time t-1's entropy
-  double *S_xnt_ybt;      // Node X at t and Y at t-1 Joint entropy
-  double *S_ynt_ybt;      // Node Y at t and Y at t-1 Joint entropy
-  double *S_xnt_ybt_xbt;  // Node X at t & Y at t-1 & X at t-1 Joint entropy
-  int **P_xbt;          // Node X time t's probability
-  int **P_xnt;          // Node X time t-1's probability
-  int **P_xnt_ybt;      // Node X at t and Y at t-1 Joint probability
-  int **P_ynt_ybt;      // Node Y at t and Y at t-1 Joint probability
+  double *S_xbt;          // S(Xt-1) Node X time t-1's entropy
+  double *S_xnt_xbt;      // S(Xt, Xt-1) Node X at t and X at t-1 Joint entropy
+  double *S_ybt_xbt;      // S(Yt-1, Xt-1) Node Y at t-1 and X at t-1 Joint entropy
+  double *S_xnt_ybt_xbt;  // S(Xt, Yt-1, Xt-1) Node X at t & Y at t-1 & X at t-1 Joint entropy
+  int **P_xbt;          // Node X time t-1's probability
+  int **P_xnt_xbt;      // Node X at t and X at t-1 Joint probability
+  int **P_ybt_xbt;      // Node X at t and Y at t-1 Joint probability
   int **P_xnt_ybt_xbt;  // Node X at t & Y at t-1 & X at t-1 Joint probability
 
   /* Populations of the system*/
@@ -76,7 +74,7 @@ int main(int argc, char *argv[]){
   }
   
   int F = (int) pow(2,K); // number of total boolean functions
-  int C = N*(N-1)/2;      // Combinations of choosing 2 nodes in N number of nodes without XX
+  int C = N*N*N;      // Combinations of choosing 3 nodes in N number of nodes where nodes can can repeat
   int H = N*N;            // Combinations of choosing 2 nodes in N number of nodes where two can repeat
   
   // State of each node will be 1 or 0. Index means node number; elements means the state
@@ -96,16 +94,14 @@ int main(int argc, char *argv[]){
   Zeros2d_int(ftable, N, F);
   
   // Single variable entropy
-  S_xbt = dvector(0,N-1); // Node X time t's entropy
-  S_xnt = dvector(0,N-1); // Node X time t-1's entropy
-  S_xnt_ybt = dvector(0, H-1);     // Node X at t and Y at t-1 Joint entropy
-  S_ynt_ybt = dvector(0, H-1);      // Node Y at t and Y at t-1 Joint entropy
-  S_xnt_ybt_xbt = dvector(0, N*N*N-1);  // Node X at t & Y at t-1 & X at t-1 Joint entropy
+  S_xbt = dvector(0,N-1); // Node X time t-1's entropy
+  S_xnt_xbt = dvector(0, H-1);     // Node X at t and X at t-1 Joint entropy
+  S_ybt_xbt = dvector(0, H-1);      // Node Y at t-1 and X at t-1 Joint entropy
+  S_xnt_ybt_xbt = dvector(0, C-1);  // Node X at t & Y at t-1 & X at t-1 Joint entropy
 
-  P_xbt = imatrix(0,N-1,0,1);          // Node X time t's probability
-  P_xnt = imatrix(0,N-1,0,1);          // Node X time t-1's probability
-  P_xnt_ybt = imatrix(0, H-1, 0, 3);      // Node X at t and Y at t-1 Joint probability
-  P_ynt_ybt = imatrix(0, H-1, 0, 3);      // Node Y at t and Y at t-1 Joint probability
+  P_xbt = imatrix(0,N-1,0,1);          // Node X time t-1's probability
+  P_xnt_xbt = imatrix(0, H-1, 0, 3);      // Node X at t and X at t-1 Joint probability
+  P_ybt_xbt = imatrix(0, H-1, 0, 3);      // Node Y at t-1 and X at t-1 Joint probability
   P_xnt_ybt_xbt = imatrix(0, N*N*N-1, 0, 7); 
   
   // Populations
@@ -135,7 +131,6 @@ int main(int argc, char *argv[]){
   /* Start the evolution*/
   for (g=0; g<G; g++){
     sumTE = 0;
-
     // Each generation go through every population
     for (i=0; i < S; i++){
       AIP2node(IniS[i], node, N);            // copy inital cofig to node
@@ -154,54 +149,57 @@ int main(int argc, char *argv[]){
       // If cycle period is fixed point there's no need to find probability
       if (length > 1){
         for (j=0; j<length; j++){
-          Anode2tnode(node, tnode, N); // copy the starting config
+          Anode2tnode(node, tnode, N); // copy the previous config
           Nextconfig(connect, ftable, node, mnode, N, K);
-          TE_P(P_xbt, P_xnt, P_xnt_ybt, P_ynt_ybt, P_xnt_ybt_xbt, tnode, node, N);
+          shownode(node, N);
+          shownode(tnode, N);
+          TE_P(P_xbt, P_xnt_xbt, P_ybt_xbt, P_xnt_ybt_xbt, tnode, node, N);
         }
         Att[i] = length;
-        TE_E(P_xbt, P_xnt_ybt, P_ynt_ybt, P_xnt_ybt_xbt, S_xbt, S_xnt_ybt, S_ynt_ybt, S_xnt_ybt_xbt, N, length);
+        TE_E(P_xbt, P_xnt_xbt, P_ybt_xbt, P_xnt_ybt_xbt, S_xbt, S_xnt_xbt, S_ybt_xbt, S_xnt_ybt_xbt, N, length);
       }
       else{Att[i] = length;}
+      printf("Attractor length %d \n", length);
+      //showPx(P_xbt, N);
+      //showPxy(P_xnt_xbt, H);
+      //showPxy(P_ybt_xbt, H);
+      //showPxyz(P_xnt_ybt_xbt, C);
+      printf("S_xbt \n");
+      showS(S_xbt, N);
+      printf("S_xnt_xbt \n");
+      showS(S_xnt_xbt, H);
+      printf("S_ybt_xbt \n");
+      showS(S_ybt_xbt, H);
+      printf("S_xnt_ybt_xbt \n");
+      showS(S_xnt_ybt_xbt, C);
 
       // getting MI
-      TE[i] = Transfer_Entropy(S_xbt, S_xnt_ybt, S_ynt_ybt, S_xnt_ybt_xbt, N)/(N*N*N);
+      TE[i] = Transfer_Entropy(S_xbt, S_xnt_xbt, S_ybt_xbt, S_xnt_ybt_xbt, N)/C;
       sumTE = sumTE + pow(TE[i], alp);
-      showPx(P_xbt, N);
-      showPx(P_xnt, N);
-      showPxy(P_xnt_ybt, H);
-      showPxy(P_ynt_ybt, H);
-      showPxyz(P_xnt_ybt_xbt, N*N*N);
-      showS(S_xbt, N);
-      showS(S_xnt, N);
-      showS(S_ynt_ybt, H);
-      showS(S_xnt_ybt, H);
-      showS(S_xnt_ybt_xbt, N*N*N);
-      // Reset Px, Py, Sy, Sxy
-      Zeros2d_int(P_xnt, N, 2);
+      
+      // Reset All probabilities
       Zeros2d_int(P_xbt, N, 2);
-      Zeros2d_int(P_xnt_ybt, H, 4);
-      Zeros2d_int(P_ynt_ybt, H, 4);
-      Zeros2d_int(P_xnt_ybt_xbt, N*N*N-1, 8);
-
-      Zeros1d_dobule(S_xnt, N);
+      Zeros2d_int(P_xnt_xbt, H, 4);
+      Zeros2d_int(P_ybt_xbt, H, 4);
+      Zeros2d_int(P_xnt_ybt_xbt, C, 8);
       Zeros1d_dobule(S_xbt, N);
-      Zeros1d_dobule(S_xnt_ybt, H);
-      Zeros1d_dobule(S_ynt_ybt, H);
-      Zeros1d_dobule(S_xnt_ybt_xbt, N*N*N);
+      Zeros1d_dobule(S_xnt_xbt, H);
+      Zeros1d_dobule(S_ybt_xbt, H);
+      Zeros1d_dobule(S_xnt_ybt_xbt, C);
     }
     
     // Save all the info
     //saveBoolfS(argv[12], BoolfS, N, K, S, g);
-    showBoolfS(BoolfS, N, K, S);
+    //showBoolfS(BoolfS, N, K, S);
     //saveIniS(argv[13], IniS, N, S, g);
-    showIniS(BoolfS, N, S);
+    //showIniS(IniS, N, S);
     //saveMI(argv[14], TE, S, g);
     showTE(TE, S);
     //saveAttractor(argv[15], Att, S, g);
 
     // Measuring fitness function
     for (i=0; i<S; i++){fitness[i] = pow(TE[i],alp)/sumTE;}
-    showfitness(fitness, S);
+    //showfitness(fitness, S);
 
     // Choosing high MI individual base on MI
     Replicate(rep, fitness, S, seedB);
@@ -226,16 +224,14 @@ int main(int argc, char *argv[]){
 
   //////////////////////////////////////////
   free_dvector(S_xbt, 0, N-1); // Node X time t's entropy
-  free_dvector(S_xnt, 0, N-1); // Node X time t-1's entropy
-  free_dvector(S_xnt_ybt, 0, H-1);     // Node X at t and Y at t-1 Joint entropy
-  free_dvector(S_ynt_ybt, 0, H-1);      // Node Y at t and Y at t-1 Joint entropy
-  free_dvector(S_xnt_ybt_xbt, 0, N*N*N-1);  // Node X at t & Y at t-1 & X at t-1 Joint entropy
+  free_dvector(S_xnt_xbt, 0, H-1);     // Node X at t and X at t-1 Joint entropy
+  free_dvector(S_ybt_xbt, 0, H-1);      // Node Y at t and Y at t-1 Joint entropy
+  free_dvector(S_xnt_ybt_xbt, 0, C-1);  // Node X at t & Y at t-1 & X at t-1 Joint entropy
 
   free_imatrix(P_xbt, 0, N-1, 0, 1);          // Node X time t's probability
-  free_imatrix(P_xnt, 0, N-1, 0, 1);          // Node X time t-1's probability
-  free_imatrix(P_xnt_ybt, 0, H-1, 0, 3);      // Node X at t and Y at t-1 Joint probability
-  free_imatrix(P_ynt_ybt, 0, H-1, 0, 3);      // Node Y at t and Y at t-1 Joint probability
-  free_imatrix(P_xnt_ybt_xbt, 0, N*N*N-1, 0, 7); 
+  free_imatrix(P_xnt_xbt, 0, H-1, 0, 3);      // Node X at t and X at t-1 Joint probability
+  free_imatrix(P_ybt_xbt, 0, H-1, 0, 3);      // Node Y at t and Y at t-1 Joint probability
+  free_imatrix(P_xnt_ybt_xbt, 0, C-1, 0, 7); 
   ///////////////////////////////////////////
 
   free_imatrix(connect, 0, N-1, 0, K-1);

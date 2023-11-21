@@ -17,19 +17,6 @@ void SumProbability(int **Pxy, int **Px, int *node, int N){
     }
   }
 }
-double Mutual(double *Sxy, double *Sx, int N){
-  int i,j;
-  int c=0;
-  double MI=0;
-  for (i=0; i<N; i++){
-    for (j=i+1; j<N; j++){
-      MI = MI + Sx[i] + Sx[j] - Sxy[c];
-      //printf("%lf %lf %lf %lf\n", Sx[i], Sx[j], Sxy[c], MI);
-      c++;
-    }
-  }
-  return MI;
-}
 void Entropy(int **Pxy, int **Px, double *Sxy, double *Sx, int N, int len){
   double Pab, Pa;
   int i,j;
@@ -50,5 +37,27 @@ void Entropy(int **Pxy, int **Px, double *Sxy, double *Sx, int N, int len){
       }
       c++;
     }
+  }
+}
+
+double Mutual(double *Sxy, double *Sx, int N){
+  int i,j;
+  int c=0;
+  double MI=0;
+  for (i=0; i<N; i++){
+    for (j=i+1; j<N; j++){
+      MI = MI + Sx[i] + Sx[j] - Sxy[c];
+      //printf("%lf %lf %lf %lf\n", Sx[i], Sx[j], Sxy[c], MI);
+      c++;
+    }
+  }
+  return MI;
+}
+
+void showMI(double *MI, int S){
+  int i;
+  for (i=0; i<S; i++){
+    printf("MI[%d]:%lf ", i, MI[i]);
+    printf("\n");
   }
 }

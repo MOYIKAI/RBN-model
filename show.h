@@ -14,5 +14,3 @@ void showPxyz(int **Pxyz, int H);
 void showS(double *S, int N);
 void showrep(int *rep, int S);
 void showfitness(double *fitness, int S);
-void showMI(double *MI, int S);
-void showTE(double *TE, int S);

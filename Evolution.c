@@ -31,10 +31,6 @@ void Replicate(int *rep, double *fit, int S, long seed){
   }
 }
 
-
-
-
-
 // For attractor
 int compare(int *node, int *tnode, int N) {
   int i;

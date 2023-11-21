@@ -5,5 +5,6 @@
 
 // For MI
 void SumProbability(int **Pxy, int **Px, int *node, int N);
-double Mutual(double *Sxy, double *Sx, int N);
 void Entropy(int **Pxy, int **Px, double *Sxy, double *Sx, int N, int len);
+double Mutual(double *Sxy, double *Sx, int N);
+void showMI(double *MI, int S);

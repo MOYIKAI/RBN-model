@@ -3,7 +3,6 @@
 #include <stdlib.h>	    // standard library with lots of functions
 #include <math.h>	      // standard math library
 #include "MI.h"         // Mutual information
-#include "TE.h"         // Transfer Entropy
 #include "random.h"     // random number generator
 #include "my_nrutil.h"  // dynamic malloc for vector, matrix, and tensor
 #include "Generate.h"   // Generate structure of the netwrok
